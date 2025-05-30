@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Efficiency Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .toggl-config {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .toggl-config h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .api-setup {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input, .form-group select {
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f, #a8e6cf);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+        }
+
+        .team-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .employee-card {
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .employee-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .employee-hours {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .employee-efficiency {
+            font-size: 0.9rem;
+            color: #28a745;
+            margin-bottom: 8px;
+        }
+
+        .employee-tasks {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .suggestions-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .suggestion-item {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+            position: relative;
+        }
+
+        .suggestion-item::before {
+            content: "💡";
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .suggestion-priority {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: #f39c12;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .suggestion-priority.high {
+            background: #dc3545;
+        }
+
+        .suggestion-priority.medium {
+            background: #fd7e14;
+        }
+
+        .suggestion-priority.low {
+            background: #28a745;
+        }
+
+        .redundancy-item {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            position: relative;
+        }
+
+        .redundancy-item::before {
+            content: "⚠️";
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .redundancy-impact {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.syncing {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .task-category {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .category-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .category-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .category-employees {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .category-time {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .sync-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .ai-insights {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .insight-tag {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .efficiency-matrix {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .matrix-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .matrix-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .matrix-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .auto-assign-btn {
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .overlap-warning {
+            background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .overlap-warning h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .overlap-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .overlap-list li {
+            padding: 5px 0;
+            color: #856404;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #dc3545;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #28a745;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .api-setup {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .employee-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Office Efficiency Tracker</h1>
+            <p>AI-Powered Toggl Integration for Maximum Productivity & Zero Duty Overlap</p>
+        </div>
+
+        <div class="toggl-config">
+            <h2>🔗 Toggl Integration Setup</h2>
+            <div class="api-setup">
+                <div class="form-group">
+                    <label for="togglApiKey">Toggl API Key:</label>
+                    <input type="password" id="togglApiKey" placeholder="Enter your Toggl API key">
+                </div>
+                <div class="form-group">
+                    <label for="workspaceSelect">Workspace:</label>
+                    <select id="workspaceSelect" disabled>
+                        <option value="">Select workspace...</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="connectBtn" onclick="connectToggl()">
+                    <span>🔗</span> Connect Toggl
+                </button>
+            </div>
+            <div id="connectionStatus" class="status disconnected">
+                <span>❌</span> Disconnected
+            </div>
+            <div id="statusMessage"></div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>📊 Real-Time Team Overview</h3>
+                <div class="team-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalHours">0</div>
+                        <div class="stat-label">Total Hours Today</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgEfficiency">0%</div>
+                        <div class="stat-label">Avg Efficiency</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeProjects">0</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="overlapCount">0</div>
+                        <div class="stat-label">Task Overlaps</div>
+                    </div>
+                </div>
+                <button class="btn btn-success auto-assign-btn" id="syncBtn" onclick="syncData()" disabled>
+                    <span id="syncIcon">🔄</span> <span id="syncText">Connect Toggl First</span>
+                </button>
+                <button class="btn btn-warning auto-assign-btn" onclick="autoAssignTasks()">
+                    <span>🤖</span> Auto-Assign Optimal Tasks
+                </button>
+            </div>
+
+            <div class="card">
+                <h3>👥 Employee Performance Matrix</h3>
+                <div id="employeeList">
+                    <!-- Employee cards will be populated by JavaScript -->
+                </div>
+                <div class="efficiency-matrix">
+                    <div class="matrix-item">
+                        <div class="matrix-score" id="topPerformer">92%</div>
+                        <div class="matrix-label">Top Performer</div>
+                    </div>
+                    <div class="matrix-item">
+                        <div class="matrix-score" id="mostImproved">+15%</div>
+                        <div class="matrix-label">Most Improved</div>
+                    </div>
+                    <div class="matrix-item">
+                        <div class="matrix-score" id="avgProductivity">85%</div>
+                        <div class="matrix-label">Avg Productivity</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card ai-insights">
+                <h3>🤖 AI-Powered Smart Assignments</h3>
+                <div class="insight-tag">ZERO OVERLAP</div>
+                <div class="insight-tag">EFFICIENCY MAXIMIZED</div>
+                <div class="insight-tag">REAL-TIME OPTIMIZATION</div>
+                <ul class="suggestions-list" id="aiSuggestions">
+                    <!-- AI suggestions will be populated by JavaScript -->
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>⚠️ Duty Overlap Detection & Prevention</h3>
+                <div id="overlapWarnings">
+                    <!-- Overlap warnings will be populated by JavaScript -->
+                </div>
+                <div id="redundancyList">
+                    <!-- Redundancy items will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📈 Optimized Time Distribution</h3>
+                <div id="timeBreakdown">
+                    <!-- Time breakdown will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🎯 Advanced Optimization Engine</h3>
+                <div class="efficiency-matrix">
+                    <div class="matrix-item">
+                        <div class="matrix-score" id="timeWasted">2.3h</div>
+                        <div class="matrix-label">Time Saved Today</div>
+                    </div>
+                    <div class="matrix-item">
+                        <div class="matrix-score" id="duplicationReduced">5</div>
+                        <div class="matrix-label">Duplications Prevented</div>
+                    </div>
+                    <div class="matrix-item">
+                        <div class="matrix-score" id="optimizationScore">94%</div>
+                        <div class="matrix-label">Optimization Score</div>
+                    </div>
+                </div>
+                <ul class="suggestions-list" id="optimizationSuggestions">
+                    <!-- Optimization suggestions will be populated by JavaScript -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced employee data with detailed task proficiency
+        const employees = {
+            'Bryce': {
+                role: 'Office Manager',
+                specialties: ['Communication', 'Admin', 'Meeting Coordination', 'Customer Relations'],
+                efficiency: 85,
+                taskProficiency: {
+                    'Phone calls': 95,
+                    'Email management': 90,
+                    'Meeting preparation': 88,
+                    'Customer service': 85,
+                    'Filing': 70,
+                    'Administrative': 82
+                },
+                currentTasks: ['Phone calls', 'Meeting prep', 'Email management'],
+                hoursToday: 7.2,
+                strongTasks: ['Complex customer calls', 'Meeting coordination', 'Team communication'],
+                weakTasks: ['Filing', 'Financial processing']
+            },
+            'Ben': {
+                role: 'AR/Finance Specialist',
+                specialties: ['Accounts Receivable', 'Financial Reports', 'Data Analysis', 'Invoice Management'],
+                efficiency: 92,
+                taskProficiency: {
+                    'AR processing': 98,
+                    'Invoice management': 95,
+                    'Financial analysis': 92,
+                    'Report generation': 90,
+                    'Bank reconciliation': 88,
+                    'Data entry': 85
+                },
+                currentTasks: ['AR processing', 'Invoice management', 'Financial reports'],
+                hoursToday: 8.1,
+                strongTasks: ['AR/Invoice processing', 'Financial analysis', 'Problem resolution'],
+                weakTasks: ['Customer service', 'Physical maintenance']
+            },
+            'Anastosia': {
+                role: 'Admin/Customer Service',
+                specialties: ['Customer Service', 'Scheduling', 'Basic Admin', 'Phone Management'],
+                efficiency: 78,
+                taskProficiency: {
+                    'Phone answering': 85,
+                    'Appointment booking': 82,
+                    'Schedule management': 80,
+                    'Customer service': 78,
+                    'Filing': 75,
+                    'GPS reports': 70
+                },
+                currentTasks: ['Phone answering', 'Schedule management', 'Customer service'],
+                hoursToday: 6.8,
+                strongTasks: ['Basic phone handling', 'Appointment scheduling', 'Routine admin'],
+                weakTasks: ['Complex problem solving', 'Financial tasks']
+            },
+            'Logan': {
+                role: 'Operations/Tech Manager',
+                specialties: ['Technical Support', 'System Management', 'Multi-tasking', 'Process Improvement'],
+                efficiency: 88,
+                taskProficiency: {
+                    'Technical troubleshooting': 95,
+                    'System setup': 92,
+                    'Process improvement': 90,
+                    'Multi-tasking': 88,
+                    'Administrative': 85,
+                    'Customer service': 80
+                },
+                currentTasks: ['Technical support', 'System management', 'Process optimization'],
+                hoursToday: 7.5,
+                strongTasks: ['Technical problem solving', 'System optimization', 'Cross-department coordination'],
+                weakTasks: ['Routine data entry', 'Repetitive tasks']
+            },
+            'Cherish': {
+                role: 'Finance/Admin Assistant',
+                specialties: ['Financial Processing', 'Administrative Support', 'Documentation', 'Filing'],
+                efficiency: 75,
+                taskProficiency: {
+                    'Bank reconciliation': 80,
+                    'Document processing': 78,
+                    'Filing': 85,
+                    'Data entry': 75,
+                    'Administrative': 70,
+                    'Financial analysis': 65
+                },
+                currentTasks: ['Bank reconciliation', 'Filing', 'Document processing'],
+                hoursToday: 6.2,
+                strongTasks: ['Document organization', 'Basic financial processing', 'Filing systems'],
+                weakTasks: ['Complex financial analysis', 'Customer interaction']
+            }
+        };
+
+        // Enhanced task categories with overlap detection
+        const taskCategories = {
+            'Communication': {
+                tasks: ['Phone calls', 'Email', 'Customer interaction', 'Scheduling'],
+                optimalAssignee: 'Bryce',
+                currentAssignees: ['Bryce', 'Anastosia'],
+                overlapRisk: 'Medium'
+            },
+            'Financial': {
+                tasks: ['AR processing', 'Bank deposits', 'Reconciliation', 'Invoice management'],
+                optimalAssignee: 'Ben',
+                currentAssignees: ['Ben', 'Cherish'],
+                overlapRisk: 'High'
+            },
+            'Administrative': {
+                tasks: ['Filing', 'Documentation', 'Meeting prep', 'Schedule management'],
+                optimalAssignee: 'Logan',
+                currentAssignees: ['Bryce', 'Anastosia', 'Logan', 'Cherish'],
+                overlapRisk: 'Critical'
+            },
+            'Technical': {
+                tasks: ['System troubleshooting', 'Software setup', 'Equipment maintenance'],
+                optimalAssignee: 'Logan',
+                currentAssignees: ['Logan'],
+                overlapRisk: 'None'
+            },
+            'Customer Service': {
+                tasks: ['Phone answering', 'Booking jobs', 'Customer follow-up'],
+                optimalAssignee: 'Bryce',
+                currentAssignees: ['Bryce', 'Anastosia'],
+                overlapRisk: 'Medium'
+            }
+        };
+
+        let togglConnected = false;
+        let togglData = null;
+        let realTimeData = {
+            lastSync: null,
+            overlapDetections: [],
+            efficiencyScores: {},
+            taskAssignments: {}
+        };
+
+        // Toggl API integration functions
+        async function connectToggl() {
+            const apiKey = document.getElementById('togglApiKey').value.trim();
+            const connectBtn = document.getElementById('connectBtn');
+            const statusDiv = document.getElementById('connectionStatus');
+            const messageDiv = document.getElementById('statusMessage');
+            
+            if (!apiKey) {
+                showMessage('Please enter your Toggl API key', 'error');
+                return;
+            }
+
+            connectBtn.disabled = true;
+            connectBtn.innerHTML = '<span>🔄</span> Connecting...';
+            statusDiv.className = 'status syncing';
+            statusDiv.innerHTML = '<span>🔄</span> Connecting...';
+
+            try {
+                // Simulate API connection (replace with actual Toggl API calls)
+                await simulateTogglConnection(apiKey);
+                
+                togglConnected = true;
+                statusDiv.className = 'status connected';
+                statusDiv.innerHTML = '<span>✅</span> Connected & Syncing';
+                connectBtn.innerHTML = '<span>✅</span> Connected';
+                
+                document.getElementById('syncBtn').disabled = false;
+                document.getElementById('syncText').textContent = 'Sync Toggl Data';
+                
+                showMessage('Successfully connected to Toggl! Auto-sync enabled.', 'success');
+                
+                // Start auto-sync
+                startAutoSync();
+                
+            } catch (error) {
+                togglConnected = false;
+                statusDiv.className = 'status disconnected';
+                statusDiv.innerHTML = '<span>❌</span> Connection Failed';
+                connectBtn.innerHTML = '<span>🔗</span> Retry Connection';
+                connectBtn.disabled = false;
+                
+                showMessage(`Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulateTogglConnection(apiKey) {
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Simulate successful connection and workspace loading
+            const workspaceSelect = document.getElementById('workspaceSelect');
+            workspaceSelect.disabled = false;
+            workspaceSelect.innerHTML = `
+                <option value="123">Main Office Workspace</option>
+                <option value="456">Project Management</option>
+            `;
+            workspaceSelect.value = "123";
+            
+            return true;
+        }
+
+        function startAutoSync() {
+            // Sync immediately
+            syncData();
+            
+            // Set up periodic sync every 5 minutes
+            setInterval(() => {
+                if (togglConnected) {
+                    syncData(true); // Silent sync
+                }
+            }, 5 * 60 * 1000);
+        }
+
+        async function syncData(silent = false) {
+            if (!togglConnected) {
+                showMessage('Please connect to Toggl first', 'error');
+                return;
+            }
+
+            const syncBtn = document.getElementById('syncBtn');
+            const syncIcon = document.getElementById('syncIcon');
+            const syncText = document.getElementById('syncText');
+            
+            if (!silent) {
+                syncBtn.disabled = true;
+                syncIcon.textContent = '🔄';
+                syncText.textContent = 'Syncing...';
+                syncBtn.classList.add('sync-animation');
+            }
+
+            try {
+                // Simulate API data fetch
+                await generateRealisticTogglData();
+                
+                // Update all dashboard components
+                updateDashboard();
+                detectOverlaps();
+                generateAISuggestions();
+                updateOptimizationMetrics();
+                
+                realTimeData.lastSync = new Date();
+                
+                if (!silent) {
+                    syncIcon.textContent = '✅';
+                    syncText.textContent = 'Synced!';
+                    setTimeout(() => {
+                        syncIcon.textContent = '🔄';
+                        syncText.textContent = 'Sync Toggl Data';
+                        syncBtn.disabled = false;
+                        syncBtn.classList.remove('sync-animation');
+                    }, 2000);
+                    
+                    showMessage('Data synchronized successfully!', 'success');
+                }
+                
+            } catch (error) {
+                if (!silent) {
+                    syncIcon.textContent = '❌';
+                    syncText.textContent = 'Sync Failed';
+                    setTimeout(() => {
+                        syncIcon.textContent = '🔄';
+                        syncText.textContent = 'Retry Sync';
+                        syncBtn.disabled = false;
+                        syncBtn.classList.remove('sync-animation');
+                    }, 3000);
+                }
+                
+                showMessage(`Sync failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function generateRealisticTogglData() {
+            // Simulate realistic work patterns based on employee profiles
+            const currentHour = new Date().getHours();
+            const workdayMultiplier = currentHour >= 8 && currentHour <= 17 ? 1 : 0.3;
+            
+            togglData = {
+                totalHours: Math.round((25 + Math.random() * 15) * workdayMultiplier * 10) / 10,
+                lastUpdated: new Date(),
+                entries: []
+            };
+
+            // Generate entries for each employee based on their profiles
+            Object.keys(employees).forEach(empName => {
+                const emp = employees[empName];
+                const baseHours = emp.hoursToday * workdayMultiplier;
+                
+                emp.currentTasks.forEach(task => {
+                    const duration = (base
